@@ -1,0 +1,32 @@
+name: virulence-factors
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # Core dependencies
+  - python>=3.7
+  - pandas>=1.3.0
+  - biopython>=1.79
+  
+  # System tools
+  - blast
+  - krona
+  
+  # Visualization dependencies
+  - matplotlib>=3.3.0
+  - seaborn>=0.11.0
+  
+  # Additional useful tools
+  - pip
+  - numpy
+  
+  # Optional: for faster package solving
+  - mamba
+  
+  # Heatmap Visualization (R)
+  - r-base>=4.0
+  - r-dplyr
+  - r-tidyr
+  - r-pheatmap
+  - r-rcolorbrewer
+  - bioconductor-complexheatmap

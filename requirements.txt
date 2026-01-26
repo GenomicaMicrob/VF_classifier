@@ -1,0 +1,8 @@
+# Python dependencies for virulence factors classifier
+# Note: System dependencies (git, blast, krona) must be installed separately
+# See README.md for complete installation instructions
+
+pandas>=1.3.0
+biopython>=1.79
+matplotlib>=3.3.0
+seaborn>=0.11.0
