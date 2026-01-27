@@ -1,4 +1,4 @@
-name: virulence-factors
+name: VF_classifier
 channels:
   - conda-forge
   - bioconda
@@ -24,9 +24,11 @@ dependencies:
   - mamba
   
   # Heatmap Visualization (R)
-  - r-base>=4.0
+  - r-base>=4.2
   - r-dplyr
   - r-tidyr
   - r-pheatmap
   - r-rcolorbrewer
-  - bioconductor-complexheatmap
+  - r-getoptlong
+  - r-biocmanager
+  - bioconductor-complexheatmap>=2.16

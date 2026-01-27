@@ -1,6 +1,6 @@
 # Installation Guide
 
-This document provides detailed installation options for the Virulence Factors Classifier. For most users, the recommended method using the environment.yml file is the simplest approach.
+This document provides detailed installation options for the Virulence Factors Classifier (VF_classifier). For most users, the recommended approach using the environment.yml file is the simplest.
 
 A functioning installation is composed of three main steps:
 
@@ -15,7 +15,7 @@ For most users, follow these simple steps:
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd virulence_factors
+cd VF_classifier
 
 # Make script executable
 chmod +x *.py *.R
@@ -27,7 +27,7 @@ conda install -c conda-forge mamba
 mamba env create -f environment.yml
 
 # Activate the environment
-conda activate virulence-factors
+conda activate VF_classifier
 ```
 
 That's it! You're ready to use the tool. The environment.yml file includes all necessary dependencies.
@@ -42,8 +42,8 @@ Mamba is a faster alternative to conda and can install all dependencies, includi
 
 ```bash
 # Create a new conda environment with mamba
-conda create -n virulence-factors -c conda-forge mamba
-conda activate virulence-factors
+conda create -n VF_classifier -c conda-forge mamba
+conda activate VF_classifier
 
 # Install all dependencies, including BLAST and Krona
 mamba install -c bioconda -c conda-forge blast krona pandas biopython matplotlib seaborn
@@ -55,8 +55,8 @@ If you prefer to use conda instead of mamba, be warned that it will be **much sl
 
 ```bash
 # Create a new conda environment
-conda create -n virulence-factors -c conda-forge
-conda activate virulence-factors
+conda create -n VF_classifier -c conda-forge
+conda activate VF_classifier
 
 # Install all dependencies, including BLAST and Krona
 conda install -c bioconda -c conda-forge blast krona pandas biopython matplotlib seaborn
@@ -136,7 +136,7 @@ pip install pandas biopython
 
 To generate advanced comparative heatmaps using `plot_vf_heatmap.R`, you must have R installed. The script will automatically attempt to install required packages (ComplexHeatmap, dplyr, etc.) on its first run.
 
-#### Install R system-wide (in case you dont have it yet)
+#### Install R system-wide (in case you don't have it yet)
 
 ```bash
 # macOS (using Homebrew):
@@ -201,17 +201,17 @@ For more information, visit: <https://www.mgc.ac.cn/VFs/>
 
 ### Option 1: Automated VFDB Download Script (Recommended)
 
-Use the enhanced download script with intelligent database management; consider that the VFDB webpage may change and the script may need to be updated.
+Use the enhanced download script with intelligent database management; note that the VFDB webpage may change, so the script may need to be updated.
 
 ```bash
 # enter the directory
-cd virulence_factors
+cd VF_classifier
 
 # Download and create BLAST database with version checking
-./virulence_factors.v0.1.0.py --setup
+./VF_classifier.v0.1.0.py --setup
 
 # To force an update even if up to date:
-./virulence_factors.v0.1.0.py --setup --force
+./VF_classifier.v0.1.0.py --setup --force
 ```
 
 **Features of the enhanced script:**
@@ -267,10 +267,51 @@ python -c "import matplotlib, seaborn; print('Visualization packages OK')"
 ktImportText --help
 
 # Check script
-python virulence_factors.v0.1.0.py -h
+python VF_classifier.v0.1.0.py -h
 
 # Check R and ComplexHeatmap (if R is installed)
 Rscript -e "if (!require('ComplexHeatmap', quietly=TRUE)) { print('ComplexHeatmap not found, will be installed on first run') } else { print('ComplexHeatmap OK') }"
 ```
 
-If all commands run without errors, your installation is complete!
+## Troubleshooting
+
+### R Package Version Mismatches
+
+If you see an error stating a package was "installed before R 4.0.0", it means R is finding an old, incompatible binary in your system or cache.
+
+**Solution: The "Clean Start"**
+If the standard installation fails with library errors, follow these steps to clear the cache and start fresh:
+
+```bash
+# Deactivate and remove the environment
+conda deactivate
+conda env remove -n VF_classifier
+
+# CLEAR CACHE (The Nuclear Option)
+# This ensures no broken binaries are reused
+conda clean --all
+
+# Re-create environment
+mamba env create -f environment.yml
+```
+
+### Dependency Conflicts
+
+If `conda` or `mamba` fails to solve the environment, try updating the solver first:
+
+```bash
+conda update -n base conda
+# or if using mamba
+mamba update -n base mamba
+```
+
+### Shadowing Libraries
+
+Sometimes R finds packages in your personal folder (`~/R/...`) instead of the Conda environment. To see which paths R is searching, run:
+
+```bash
+conda activate VF_classifier
+Rscript -e ".libPaths()"
+```
+
+If you see paths outside of your conda environment appearing first, you may need to temporarily rename those folders during analysis.

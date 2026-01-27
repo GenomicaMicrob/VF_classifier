@@ -1,4 +1,4 @@
-# Python dependencies for virulence factors classifier
+# Python dependencies for VF_classifier
 # Note: System dependencies (git, blast, krona) must be installed separately
 # See README.md for complete installation instructions
 

@@ -57,7 +57,7 @@ This script performs comprehensive identification of virulence factors in bacter
 The script is cross-platform and supports Linux, macOS, and Windows:
 
 - **Linux/macOS**: Best performance and easy installation (Native support for all tools).
-- **Windows**: Fully supported via **Mamba/Conda** or **WSL2** (recommended). Some features like Krona may require extra configuration if installed manually on native Windows.
+- **Windows**: Fully supported via **Mamba/Conda** or **WSL2** (recommended). Some features, such as Krona, may require additional configuration when installed manually on native Windows.
 
 ## Installation
 
@@ -72,7 +72,7 @@ A functioning installation is composed of three main steps:
 ```bash
 # 1. Clone the repository
 git clone <repository-url>
-cd virulence_factors
+cd VF_classifier
 
    # Make scripts executable if you want to run them directly
 chmod +x *.py *.R
@@ -84,10 +84,10 @@ conda install -c conda-forge mamba
 mamba env create -f environment.yml
 
    # Activate the environment
-conda activate virulence-factors
+conda activate VF_classifier
 ```
 
-That's it! The environment.yml file includes all necessary dependencies including BLAST, Krona, R, and Python packages.
+That's it! The environment.yml file includes all necessary dependencies, including BLAST, Krona, R, and Python packages. Be patient, it may take a while to install all dependencies since they are about 460 MB
 
 **Need more options?** See [INSTALLATION.md](INSTALLATION.md) for alternative installation methods and detailed setup instructions.
 
@@ -95,20 +95,22 @@ That's it! The environment.yml file includes all necessary dependencies includin
 
 ### Quick Setup (Recommended)
 
+**Important**: The VFDB data is freely available for research and educational purposes only under the Creative Commons Attribution-NonCommercial (CC BY-NC) license version 4.0. For commercial use, contact the authors directly. Visit <https://www.mgc.ac.cn/VFs/> for more information.
+
 ```bash
 # 3. Download and create BLAST database automatically
-python virulence_factors.v0.1.0.py --setup
+python VF_classifier.v0.1.0.py --setup
+```
 
-# Optional: Use a pre-downloaded local file instead of downloading
-python virulence_factors.v0.1.0.py --setup --input-fasta path/to/VFDB_setB_nt.fas.gz
+```bash
+# Optional: Use a pre-downloaded fasta file instead of downloading
+python VF_classifier.v0.1.0.py --setup --input-fasta VFDB_setB_nt.fas.gz
 
 # Optional: Skip automated curation and use original headers
-python virulence_factors.v0.1.0.py --setup --no-curation
+python VF_classifier.v0.1.0.py --setup --no-curation
 ```
 
 **Note**: As a safety measure, the script will not overwrite an existing `VF_database/` directory. If you wish to re-download or re-curate the database, you must use the `--force` flag.
-
-**Important**: The VFDB data is freely available under the Creative Commons Attribution-NonCommercial (CC BY-NC) license version 4.0. For commercial use, contact the authors directly. Visit <https://www.mgc.ac.cn/VFs/> for more information.
 
 ### Automated Database Curation (Longest Name Strategy)
 
@@ -134,10 +136,10 @@ Errors might be introduced into the database this way, so be aware. If you prefe
 ## Basic Usage
 
 ```bash
-cd virulence_factors
-chmod +x virulence_factors.v0.1.0.py # if not already executable
+cd VF_classifier
+chmod +x VF_classifier.v0.1.0.py # if not already executable
 
-python virulence_factors.v0.1.0.py -i your_genome.fasta -db VF_database/VFDB_db
+python VF_classifier.v0.1.0.py -i your_genome.fasta
 ```
 
 The script can handle both compressed and uncompressed FASTA files:
@@ -150,8 +152,11 @@ The script can handle both compressed and uncompressed FASTA files:
 ### Advanced Usage
 
 ```bash
-# Process multiple genomes at once
-python virulence_factors.v0.1.0.py -i Sample1.fna Sample2.fna.gz Sample3.fasta -t 8
+# Process multiple genomes at once:
+python VF_classifier.v0.1.0.py -i Sample1.fna Sample2.fna.gz Sample3.fasta -t 8
+
+# Process multiple genomes with the same extension:
+python VF_classifier.v0.1.0.py -i *.gz
 ```
 
 ### Parameters
@@ -185,7 +190,7 @@ Contains all individual analysis files for that specific sample.
 Inside each sample folder:
 
 `[input_basename]_all_hits.tsv`
-Contains all BLAST matches with complete annotation information.
+Contains all BLAST matches to probably multiple genomes in the database, with complete annotation information.
 
 ### 2. Best Hits File
 
@@ -205,7 +210,7 @@ An interactive HTML chart for hierarchical exploration of virulence factors (req
 ### Aggregated Data Output
 
 `[input_basename]_data4plot.tsv`
-Tab-separated file with headers containing aggregated virulence factor data for custom visualizations.
+Tab-separated file with headers containing aggregated virulence factor data for custom visualizations. You might want to plot a Sunburst chart or a Sankey diagram using this file.
 
 **Columns**: Count, VF_Broad_Category, VF_Specific_Name
 
@@ -258,17 +263,19 @@ After downloading and making the database, you can test the script with the incl
 ### Example with one genome
 
 ```bash
-python virulence_factors.v0.1.0.py -i examples/NC_004116.fasta.gz
+python VF_classifier.v0.1.0.py -i examples/NC_004116.fasta.gz
 ```
 
 ### Example with multiple genomes
 
 ```bash
-python virulence_factors.v0.1.0.py -i examples/*.fasta.gz
+python VF_classifier.v0.1.0.py -i examples/*.fasta.gz
 
 # Generate an advanced comparative heatmap
 ./plot_vf_heatmap.R
 ```
+
+The `plot_vf_heatmap.R` script will automatically search for the `VF_results/multiple_samples_best_hits.csv` file and generate a PDF heatmap.
 
 ### Example Output
 
@@ -288,15 +295,15 @@ The script provides a clean, color-coded terminal experience:
 
 Here's an example of the summary plot generated by the script:
 
-![Example Summary Plot](examples/NC_004116_summary.png)
+![Example Summary Plot](assets/summary_example.png)
 
 of the Krona chart:
 
-![Example Krona Chart](examples/NC_004116_krona.png)
+![Example Krona Chart](assets/krona_example.png)
 
 and of the heatmap:
 
-![Example Heatmap](examples/vf_heatmap.png)
+![Example Heatmap](assets/vf_heatmap_example.png)
 
 ## Troubleshooting
 
@@ -309,7 +316,7 @@ and of the heatmap:
 5. **Plot not generated**: Install matplotlib and seaborn with `pip install matplotlib seaborn`
 6. **Krona chart not generated**: Install Krona tools or ensure ktImportText is in your PATH
 7. **Permission errors**: Ensure you have write permissions for creating the `VF_results/` directory
-8. **Compressed file error**: Ensure the .gz file is not corrupted and the script has read permissions
+8. **Compressed file error**: Ensure the .gz file is not corrupted, and the script has read permissions
 
 ### Possible error messages
 
@@ -322,8 +329,8 @@ and of the heatmap:
 ## File Structure
 
 ```text
-virulence_factors/
-├── virulence_factors.v0.1.0.py         # Main script (now handles downloads)
+VF_classifier/
+├── VF_classifier.v0.1.0.py             # Main script (now handles downloads)
 ├── plot_vf_heatmap.R                   # Advanced heatmap generation script (R)
 ├── assets/                             # Project assets (logos, etc.)
 │   └── logo.png                        # Project logo

@@ -12,6 +12,7 @@ import shutil
 import urllib.request
 import urllib.error
 import datetime
+import tarfile
 from pathlib import Path
 
 # Try importing plotting libraries
@@ -131,8 +132,28 @@ class VFDBManager:
             self.db_dir.mkdir(parents=True, exist_ok=True)
             
             # Copy/Extract based on extension
-            if local_fasta.lower().endswith('.gz'):
-                Msg.processing(f"Copying and extracting {os.path.basename(local_fasta)}...")
+            if local_fasta.lower().endswith(('.tar.gz', '.tgz', '.tar')):
+                Msg.processing(f"Extracting archive {os.path.basename(local_fasta)}...")
+                try:
+                    with tarfile.open(local_fasta, 'r:*') as tar:
+                        # Look for FASTA files inside
+                        members = [m for m in tar.getmembers() if m.isfile() and 
+                                  (m.name.lower().endswith('.fas') or m.name.lower().endswith('.fasta') or m.name.lower().endswith('.fna'))]
+                        
+                        if not members:
+                            Msg.error("No FASTA files (.fas, .fasta, .fna) found inside the archive.")
+                            return False
+                        
+                        # Use the first one found
+                        fasta_member = members[0]
+                        Msg.info(f"Extracting: {fasta_member.name}")
+                        with tar.extractfile(fasta_member) as f_in, open(self.fasta_unzipped, 'wb') as f_out:
+                            shutil.copyfileobj(f_in, f_out)
+                except Exception as e:
+                    Msg.error(f"Error extracting archive: {e}")
+                    return False
+            elif local_fasta.lower().endswith('.gz'):
+                Msg.processing(f"Extracting gzipped file {os.path.basename(local_fasta)}...")
                 try:
                     with gzip.open(local_fasta, 'rb') as f_in:
                         with open(self.fasta_unzipped, 'wb') as f_out:
@@ -147,6 +168,17 @@ class VFDBManager:
                 except Exception as e:
                     Msg.error(f"Error copying local file: {e}")
                     return False
+            
+            # Simple validation: is it really a FASTA?
+            try:
+                with open(self.fasta_unzipped, 'rb') as f:
+                    first_byte = f.read(1)
+                    if first_byte != b'>':
+                        Msg.error("The extracted file does not appear to be a valid FASTA (missing '>' at start).")
+                        Msg.info("Please ensure you are providing the VFDB nucleotide sequences.")
+                        return False
+            except Exception:
+                pass
             
             online_ver = "Local_Import" # Placeholder for metadata
             

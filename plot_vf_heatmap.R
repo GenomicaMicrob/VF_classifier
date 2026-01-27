@@ -4,23 +4,113 @@
 # Usage: Rscript plot_vf_heatmap.R [input.csv] [output.pdf]
 
 # --- Dependency Management ---
-# Using ComplexHeatmap for professional-grade layouts and right-side grouping
 message("Checking dependencies...")
-packages <- c("RColorBrewer", "dplyr", "tidyr", "GetoptLong", "BiocManager")
-new_packages <- packages[!(packages %in% installed.packages()[, "Package"])]
-if (length(new_packages)) install.packages(new_packages, repos = "http://cran.us.r-project.org")
 
-if (!require("ComplexHeatmap", quietly = TRUE)) {
-  message("Installing ComplexHeatmap from Bioconductor...")
-  BiocManager::install("ComplexHeatmap", update = FALSE, ask = FALSE)
+# 1. Check if we are in a Conda environment
+in_conda <- Sys.getenv("CONDA_PREFIX") != ""
+
+if (in_conda) {
+  # FORCE R to prioritize the conda library and potentially ignore system libraries
+  # that lead to "undefined symbol" or "installed before R 4.0.0" errors.
+  conda_lib <- file.path(Sys.getenv("CONDA_PREFIX"), "lib", "R", "library")
+  if (dir.exists(conda_lib)) {
+    # Keep only the conda library and the base R library to avoid system pollution
+    current_paths <- .libPaths()
+    # Find the base R library (usually ends in /R/library)
+    base_lib <- current_paths[grep("R/library$", current_paths)]
+    # Set the path strictly: [Conda Lib, Base R Lib]
+    .libPaths(unique(c(conda_lib, base_lib)))
+  }
 }
 
-suppressPackageStartupMessages({
-  library(ComplexHeatmap)
-  library(RColorBrewer)
-  library(dplyr)
-  library(tidyr)
-})
+# 2. Define required packages
+packages <- c("RColorBrewer", "dplyr", "tidyr", "GetoptLong", "BiocManager", "ComplexHeatmap")
+missing_packages <- packages[!(packages %in% installed.packages()[, "Package"])]
+
+if (length(missing_packages) > 0) {
+  if (in_conda) {
+    message("---------------------------------------------------------")
+    message("MISSING PACKAGES DETECTED IN CONDA ENVIRONMENT:")
+    message(paste(missing_packages, collapse = ", "))
+    message("\nPlease update your conda environment using:")
+    message("  conda env update -f environment.yml")
+    message("---------------------------------------------------------")
+    stop("Dependencies missing from Conda environment. Execution halted.")
+  } else {
+    # Non-conda logic: Try to find a writable library
+    get_writable_lib <- function() {
+      for (path in .libPaths()) {
+        if (file.access(path, 2) == 0) {
+          return(path)
+        }
+      }
+      user_lib <- Sys.getenv("R_LIBS_USER")
+      if (user_lib == "" || user_lib == "NA") user_lib <- file.path(Sys.getenv("HOME"), "R", "library")
+      if (!dir.exists(user_lib)) try(dir.create(user_lib, recursive = TRUE), silent = TRUE)
+      if (dir.exists(user_lib) && file.access(user_lib, 2) == 0) {
+        if (!(user_lib %in% .libPaths())) .libPaths(c(user_lib, .libPaths()))
+        return(user_lib)
+      }
+      return(NULL)
+    }
+
+    target_lib <- get_writable_lib()
+    message(paste("Installing missing packages to:", ifelse(is.null(target_lib), "Default", target_lib)))
+
+    # Install CRAN packages
+    cran_packages <- intersect(missing_packages, c("RColorBrewer", "dplyr", "tidyr", "GetoptLong", "BiocManager"))
+    if (length(cran_packages) > 0) {
+      install.packages(cran_packages, repos = "http://cran.us.r-project.org", lib = target_lib)
+    }
+
+    # Install ComplexHeatmap if still missing
+    if ("ComplexHeatmap" %in% missing_packages) {
+      if (!require("BiocManager", quietly = TRUE)) {
+        install.packages("BiocManager", repos = "http://cran.us.r-project.org", lib = target_lib)
+      }
+      BiocManager::install("ComplexHeatmap", update = FALSE, ask = FALSE, lib = target_lib)
+    }
+  }
+}
+
+# --- Dependency Loading & Error Handling ---
+load_packages <- function() {
+  # We try to load the packages and catch the specific "R 4.0.0" version error
+  tryCatch(
+    {
+      suppressPackageStartupMessages({
+        library(ComplexHeatmap)
+        library(RColorBrewer)
+        library(dplyr)
+        library(tidyr)
+      })
+    },
+    error = function(e) {
+      message("\n[ERROR] Failed to load R dependencies.")
+      message(paste("Original Error:", e$message))
+
+      if (grepl("installed before R 4.0.0", e$message)) {
+        message("\n---------------------------------------------------------")
+        message("DIAGNOSIS: Version Mismatch")
+        message("R is finding a very old version of a package (pre-2020) in")
+        message("your system or user folders that is shadowing the one in")
+        message("your Conda environment.")
+        message("\nACTION REQUIRED:")
+        message("Please run the following command to find and remove it:")
+        message("  Rscript -e '.libPaths(); find.package(\"ComplexHeatmap\")'")
+        message("\nOnce you see the path, you can remove that specific folder.")
+        message("---------------------------------------------------------")
+      }
+
+      message("\nCurrent .libPaths() being searched:")
+      for (p in .libPaths()) message(paste(" -", p))
+
+      stop("Execution halted due to library conflict.")
+    }
+  )
+}
+
+load_packages()
 
 # --- Input Handling ---
 args <- commandArgs(trailingOnly = TRUE)
@@ -133,5 +223,5 @@ draw(ht,
   padding = unit(c(30, 20, 20, 20), "mm") # Top, Right, Bottom, Left padding
 )
 
-dev.off()
+invisible(dev.off())
 message("Success! Heatmap saved to: ", output_file)
