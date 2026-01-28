@@ -14,7 +14,7 @@ For most users, follow these simple steps:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/brunogoncalves/VF_classifier.git
 cd VF_classifier
 
 # Make script executable

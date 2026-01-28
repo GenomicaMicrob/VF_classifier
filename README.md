@@ -67,20 +67,23 @@ A functioning installation is composed of three main steps:
 2. Install the dependencies (using mamba or conda)
 3. Download the VFDB fasta file and create the BLAST database
 
+If you do not have mamba already installed in your conda environment, it is highly recommended to install it:
+
+```bash
+conda install -c conda-forge mamba
+```
+
 ### Quick Installation with mamba (Recommended)
 
 ```bash
 # 1. Clone the repository
-git clone <repository-url>
+git clone https://github.com/brunogoncalves/VF_classifier.git
 cd VF_classifier
 
    # Make scripts executable if you want to run them directly
 chmod +x *.py *.R
 
-# 2. Install mamba (if not already installed)
-conda install -c conda-forge mamba
-
-   # Create environment from provided environment.yml file
+# 2. Create an environment from the provided environment.yml file
 mamba env create -f environment.yml
 
    # Activate the environment
