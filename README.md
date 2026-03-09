@@ -77,7 +77,7 @@ conda install -c conda-forge mamba
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/brunogoncalves/VF_classifier.git
+git clone https://github.com/GenomicaMicrob/VF_classifier.git
 cd VF_classifier
 
    # Make scripts executable if you want to run them directly
@@ -104,6 +104,8 @@ That's it! The environment.yml file includes all necessary dependencies, includi
 # 3. Download and create BLAST database automatically
 python VF_classifier.v0.1.0.py --setup
 ```
+
+If a "permission error" appears, then download the database manually from https://www.mgc.ac.cn/VFs/download.htm (select `DNA sequences of full dataset` and proceed as follows:
 
 ```bash
 # Optional: Use a pre-downloaded fasta file instead of downloading
